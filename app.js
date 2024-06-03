@@ -2,10 +2,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
+const sequelize = require('./config/database');
+const bookRoutes = require('./routes/bookRoutes');
 
 const app = express();
 const port = 5000;
-
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(bodyParser.json());
@@ -14,7 +15,7 @@ app.use(session({
   secret: 'your_secret_key',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } 
+  cookie: { secure: false }
 }));
 
 app.post('/api/login', (req, res) => {
@@ -36,6 +37,12 @@ app.get('/api/session', (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.use('/books', bookRoutes);
+
+sequelize.sync().then(() => {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}).catch(err => {
+  console.error('Unable to sync database:', err);
 });
